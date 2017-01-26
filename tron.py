@@ -220,12 +220,12 @@ class GameClient:
 						h=tab[i].split(':')
 						canvas.create_rectangle(int(h[1])*self.sp,int(h[2])*self.sp,(int(h[1])+1)*self.sp,(int(h[2])+1)*self.sp,fill=h[3])
 						i+=1
-						
-					sock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
-					sock.connect((host,port))
-					ask = 'move '+str(self.ite)+' '+str(self.Id)+' '+str(self.dxm)+' '+str(self.dxp)+' '+str(self.dym)+' '+str(self.dyp)
-					sock.send(ask)
-					sock.close()
+				
+			sock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
+			sock.connect((host,port))
+			ask = 'move '+str(self.ite)+' '+str(self.Id)+' '+str(self.dxm)+' '+str(self.dxp)+' '+str(self.dym)+' '+str(self.dyp)
+			sock.send(ask)
+			sock.close()
 			
 			self.disp+=1
 			if self.disp>100:
