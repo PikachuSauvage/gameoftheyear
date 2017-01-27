@@ -284,7 +284,7 @@ def findGame():
 		
 		terminaldisplay()
 		if NotConnected:
-			time.sleep(2)
+			time.sleep(0.5)
 	return params
 
 

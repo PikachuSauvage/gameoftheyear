@@ -115,7 +115,7 @@ class Game:
 			
 	def generateDataString(self):
 		s=str(self.ite)
-		if (self.ite%2)==0:
+		if (self.ite%4)==0:
 			self.gameUpdate()
 		for h in self.list_Head:      
 			s+=" "+h.name+":"+str(h.x)+":"+str(h.y)+":"+str(h.color)
@@ -208,7 +208,7 @@ def updateHighscore(winner):
 wi = 60
 he = 48
 sp = 12
-speed = 0.005
+speed = 0.0025
 delay = 3
 delayDeath = 2
 admin = True
@@ -262,7 +262,7 @@ def handler(newsock):
 		print 'Game autoresetting'
 		print count,nbParties
 	data = newsock.recv(size)
-	sd=data.split()
+	sd=data.split() 
 	#~ print sd
 	if sd[0]=='name' and waitingForPlayers:
 		color = getNewColor()
@@ -312,7 +312,7 @@ getHighscore()
 
 game = Game(wi,he,sp)
 
-sock.listen(10)
+sock.listen(15)
 players = []
 
 while True:
@@ -330,7 +330,6 @@ sock.close()
 
 # TODO List :
 
-####### 1- End of game if only one player alive 
 
 ####### 2- Change the time management so it is based on UTC time and not local time
 
