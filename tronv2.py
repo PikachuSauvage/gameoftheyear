@@ -73,6 +73,7 @@ class GameClient:
 		self.disp = 0
 		self.timeNextIte = startingTime + self.speed*self.sp
 		self.notLoadedPos = True
+		self.turned = False
 		
 	def phase_init(self):
     	# Ecriture du decompte dans la  fenetre graphique
@@ -155,19 +156,22 @@ class GameClient:
 		
 	def change(self,c):
 		# Changement de direction
-		#~ print c
-		if c=='left':
-			swap = self.dym
-			self.dym = self.dxp
-			self.dxp = self.dyp
-			self.dyp = self.dxm
-			self.dxm = swap
-		if c=='right':
-			swap = self.dym
-			self.dym = self.dxm
-			self.dxm = self.dyp
-			self.dyp = self.dxp
-			self.dxp = swap
+
+		if not self.turned:
+			print c,self.ite
+			if c=='left':
+				swap = self.dym
+				self.dym = self.dxp
+				self.dxp = self.dyp
+				self.dyp = self.dxm
+				self.dxm = swap
+			if c=='right':
+				swap = self.dym
+				self.dym = self.dxm
+				self.dxm = self.dyp
+				self.dyp = self.dxp
+				self.dxp = swap
+			self.turned = True
 		
 	def draw(self):
 		# Affichage des nouvelles positions
@@ -176,6 +180,8 @@ class GameClient:
 		global NotInGame,WaitingToStart,inGame,startingTime,lastWinner
 		if inGame:
 			if currentTime > self.timeNextIte: 
+				if self.ite%4==0:
+					self.turned = False
 				ask = '? ' + str(self.ite)
 				self.sock.send(ask)
 				tab = self.sock.recv(size).split()

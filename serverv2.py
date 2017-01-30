@@ -159,6 +159,8 @@ class Game:
 		self.list_Head = []
 		self.wall = np.ones((wi,he))*17	
 		self.ite = 0
+		for i in self.StringIte:
+					print i
 		self.StringIte = []
 		self.timeNextIte = startingTime + speed*sp
 		
@@ -309,6 +311,8 @@ def handler(newsock):
 			elif sd[0] == '?' and waitingForPlayers:
 				msg = 'NoGame '+str(startingTime)+' '+game.winner
 			elif sd[0] == '?' and inGame:
+				msg = game.getString(sd[1])
+			elif sd[0] == '?' and endGame:
 				msg = game.getString(sd[1])
 			elif sd[0] == 'move' and inGame:
 				h = game.list_Head[int(sd[2])]
