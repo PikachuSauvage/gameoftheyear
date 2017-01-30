@@ -123,11 +123,11 @@ class GameClient:
 							canvas.create_rectangle((self.wi/2-2*(4-i))*self.sp,(self.he/2-2*(2-j))*self.sp,\
 								(self.wi/2-4+2*i)*self.sp,(self.he/2-2*(1-j))*self.sp,fill=col2)
 					msg='who'
-					print 'send = ',msg
 					self.sock.send(msg)
 					LP = self.sock.recv(size).split()
 					LP.pop(0)
-					print 'recv = ',LP
+					#~ print 'send = ',msg
+					#~ print 'recv = ',LP
 					listPlayer = []
 					for lp in LP:
 						p = lp.split(':')
@@ -141,11 +141,12 @@ class GameClient:
 				WaitingToStart = False
 				inGame = True
 				msg='who'
-				print 'send = ',msg
+				
 				self.sock.send(msg)
 				LP = self.sock.recv(size).split()
 				LP.pop(0)
-				print 'recv = ',LP
+				#~ print 'send = ',msg
+				#~ print 'recv = ',LP
 				listPlayer = []
 				for lp in LP:
 					p = lp.split(':')
@@ -176,10 +177,10 @@ class GameClient:
 		if inGame:
 			if currentTime > self.timeNextIte: 
 				ask = '? ' + str(self.ite)
-				print 'send = ',ask
 				self.sock.send(ask)
 				tab = self.sock.recv(size).split()
-				print tab
+				#~ print 'send = ',ask
+				#~ print tab
 				
 				#~ if(np.random.random()<0.05):
 					#~ if(np.random.random()<0.5):
@@ -215,10 +216,11 @@ class GameClient:
 						canvas.create_rectangle(int(h[1])*self.sp,int(h[2])*self.sp,(int(h[1])+1)*self.sp,(int(h[2])+1)*self.sp,fill=h[3])
 						i += 1
 			tell = 'move '+str(self.ite)+' '+str(self.Id)+' '+str(self.dxm)+' '+str(self.dxp)+' '+str(self.dym)+' '+str(self.dyp)
-			print 'send = ',tell
+			
 			self.sock.send(tell)
 			a = self.sock.recv(size)
-			print 'recv = ',a
+			#~ print 'send = ',tell
+			#~ print 'recv = ',a
 			
 			self.disp += 1
 			if self.disp > 100:
@@ -264,11 +266,12 @@ def findGame(sock):
 	Received = False
 	while not Received:
 		data = 'name '+ player
-		print 'send = ',data
 		sock.send(data)
 		s = sock.recv(size)
-		print 'recv = ',s
-		if s.split() != []:
+		#~ print 'send = ',data
+		#~ print 'recv = ',s
+		
+		if len(s.split())>1:
 			if s.split()[0] == 'accepted':
 				NotInGame = False
 				WaitingToStart = True
@@ -276,7 +279,7 @@ def findGame(sock):
 				Received = True
 		terminaldisplay()
 		if not Received:
-			time.sleep(0.5)
+			time.sleep(0.1)
 	return params
 
 

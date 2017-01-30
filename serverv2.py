@@ -143,7 +143,8 @@ class Game:
 		if self.number_player < 2:
 			if not endGame:
 				print 'ending soon'
-				endGame = True
+				endGame = 2
+				inGame = False
 				endTime = time.time()
 				print 'The end time is', endTime
 				for i in self.list_Head:
@@ -162,7 +163,7 @@ class Game:
 		self.timeNextIte = startingTime + speed*sp
 		
 	def returnName(self):
-		s = 'Players' 
+		s = 'Players ' 
 		for i in self.list_Head:
 			s += i.name+':'+str(i.wins)+':'+str(i.totalwins)+' '
 		return s
@@ -176,7 +177,7 @@ def newgame():
 	game.reset()
 	endTime = time.time() + 20000
 	inGame = False
-	endGame = False
+	endGame = 0
 	waitingForPlayers = True
 	
 	
@@ -226,10 +227,10 @@ def handler(newsock):
 	global waitingForPlayers,startingSoon,inGame,endGame,admin,startingTime, \
 	       delay,sp,speed,endTime,endGame,nbParties,delayDeath
 	while threadLoop:
-		#~ try:
+		try:
 			#~ print 'new loop --------------------------------'
 			currentTime = time.time()
-			print waitingForPlayers,startingSoon,inGame,endGame
+			#~ print waitingForPlayers,startingSoon,inGame,endGame
 			if inGame and currentTime > game.timeNextIte:
 				s = game.generateDataString()
 				game.StringIte.append(s)
@@ -243,39 +244,43 @@ def handler(newsock):
 			if startingSoon and currentTime > startingTime:
 				startingSoon = False
 				inGame = True
+				endTime = time.time() + 20000
 				s = game.generateDataString()
 				game.StringIte.append(s)
 				game.timeNextIte = startingTime + speed*sp
 				game.ite += 1
-				endTime = time.time() + 20000
 				print 'game starting'
 				print game.number_player
 				if game.number_player < 2:
-					waitingForPlayers = True
-					inGame = False
+					endGame = 1
 					game.winner = 'None'
-					newgame()
 					print 'Not enough player, game autoresetting'
 				#~ print game.StringIte
 			#~ print currentTime-(endTime+5)
-			if currentTime > (endTime+delayDeath):
-				print 'You waited too long '
-				waitingForPlayers = True
-				inGame = False
-				game.winner = game.winner
-				newgame()
-				print 'Game autoresetting'
-				print count,nbParties
 			if endGame:
-				print 'This is the end, hold your breath and count to 10 ...'
-				waitingForPlayers = True
-				inGame = False
-				newgame()
+				if endGame == 1:
+					print 'This is the end, hold your breath and count to 10 ...'
+					waitingForPlayers = True
+					inGame = False
+					endGame = 0
+					game.winner = game.winner
+					newgame()
+					print 'Game autoresetting'
+					print count,nbParties
+				else:
+					if currentTime > (endTime+delayDeath):
+						print 'This is the end, hold your breath and count to 10 ...'
+						waitingForPlayers = True
+						inGame = False
+						endGame = 0
+						game.winner = game.winner
+						newgame()
+						print 'Game autoresetting'
+						print count,nbParties
 			
 			# Communication client-serveur
 			data2 = newsock.recv(size)
 			msg= 'error'
-			print data2
 			#~ 
 			if data2==data:
 				#~ print 'samedata'
@@ -291,7 +296,7 @@ def handler(newsock):
 				data = data2
 				
 			sd = data2.split() 
-			print sd
+			#~ print sd
 			if sd[0] == 'name' and waitingForPlayers:
 				color = getNewColor()
 				print "New player with pseudo %s joined the server"%sd[1]
@@ -322,11 +327,12 @@ def handler(newsock):
 				msg =game.returnName()
 					#~ print game.returnName()
 				#~ print AllTimePlayers
-			print msg
+			#~ print data2
+			#~ print msg
 			newsock.send(msg)
 			
-		#~ except:
-			#~ break
+		except:
+			break
 
 # Parametres du serveur	
 size = 1024
@@ -340,7 +346,7 @@ admin = True
 waitingForPlayers = True
 startingSoon = False 
 inGame = False
-endGame = False
+endGame = 0
 nbParties = 0
 startingTime = time.time() + delay
 endTime = time.time() + 20000
