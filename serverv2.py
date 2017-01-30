@@ -116,13 +116,14 @@ class Game:
 			h.move(self.wi,self.he,self.sp)
 			
 	def generateDataString(self):
-
-		# Donnees envoyees au joueur
 		s = str(self.ite)
-		if (self.ite%4) == 0:
-			self.gameUpdate()
 		for h in self.list_Head:      
 			s += " "+h.name+":"+str(h.x)+":"+str(h.y)+":"+str(h.color)
+		# Donnees envoyees au joueur
+		
+		if (self.ite%4) == 0:
+			self.gameUpdate()
+		
 		return s
 	
 	def getString(self,n):
@@ -161,7 +162,7 @@ class Game:
 		self.timeNextIte = startingTime + speed*sp
 		
 	def returnName(self):
-		s = '' 
+		s = 'Players' 
 		for i in self.list_Head:
 			s += i.name+':'+str(i.wins)+':'+str(i.totalwins)+' '
 		return s
@@ -219,19 +220,26 @@ def handler(newsock):
 	threadLoop = True
 	global count
 	count += 1
+	data =''
+	currentTime = time.time()
+	lastTime = int(currentTime)
 	global waitingForPlayers,startingSoon,inGame,endGame,admin,startingTime, \
 	       delay,sp,speed,endTime,endGame,nbParties,delayDeath
 	while threadLoop:
-		try:
+		#~ try:
+			#~ print 'new loop --------------------------------'
 			currentTime = time.time()
+			print waitingForPlayers,startingSoon,inGame,endGame
 			if inGame and currentTime > game.timeNextIte:
 				s = game.generateDataString()
 				game.StringIte.append(s)
 				game.timeNextIte += speed*sp
 				game.ite += 1
+				#~ print 'new ite'
 			if waitingForPlayers and currentTime > (startingTime-1):
 				waitingForPlayers = False
 				startingSoon = True
+				print 'starting soon'
 			if startingSoon and currentTime > startingTime:
 				startingSoon = False
 				inGame = True
@@ -240,13 +248,14 @@ def handler(newsock):
 				game.timeNextIte = startingTime + speed*sp
 				game.ite += 1
 				endTime = time.time() + 20000
+				print 'game starting'
 				print game.number_player
 				if game.number_player < 2:
 					waitingForPlayers = True
 					inGame = False
 					game.winner = 'None'
 					newgame()
-					print 'Game autoresetting'
+					print 'Not enough player, game autoresetting'
 				#~ print game.StringIte
 			#~ print currentTime-(endTime+5)
 			if currentTime > (endTime+delayDeath):
@@ -258,55 +267,66 @@ def handler(newsock):
 				print 'Game autoresetting'
 				print count,nbParties
 			if endGame:
+				print 'This is the end, hold your breath and count to 10 ...'
 				waitingForPlayers = True
 				inGame = False
 				newgame()
+			
 			# Communication client-serveur
-			data = newsock.recv(size)
-			if not data:
-				newsock.shutdown(0)
-				players.remove(newsock)
-				threadLoop = False
+			data2 = newsock.recv(size)
+			msg= 'error'
+			print data2
+			#~ 
+			if data2==data:
+				#~ print 'samedata'
+				#~ newsock.send('You are repeating yourself dude, move on')
+				if currentTime > (lastTime+10):
+					print 'end of connection'
+					break
+				#~ newsock.shutdown(0)
+				#~ players.remove(newsock)
+				#~ threadLoop = False
 			else:
-				sd = data.split() 
-				if sd[0] == 'name' and waitingForPlayers:
-					color = getNewColor()
-					print "New player with pseudo %s joined the server"%sd[1]
-					h = Head(color,sd[1])
-					game.addHead(h)
-					if admin:
-						admin = False
-						startingTime = currentTime + delay
-						newsock.send('accepted ' + str(wi) + ' ' + str(he) + ' ' + str(sp)+ ' ' \
-							+ str(1) + ' ' +str(h.Id) + ' ' + str(startingTime)+ ' ' + str(h.dxm) + \
-							' ' + str(h.dxp)+ ' ' + str(h.dym)+ ' ' + str(h.dyp)+ ' ' + str(speed))
-					else:
-						newsock.send('accepted ' +str(wi) + ' ' + str(he) + ' ' + str(sp)+ ' ' \
-							+ str(0)+ ' ' + str(h.Id)+ ' ' + str(startingTime)+ ' ' + str(h.dxm)+ \
-							' ' + str(h.dxp)+ ' ' + str(h.dym)+ ' ' + str(h.dyp)+ ' ' + str(speed))
-				elif sd[0] == '?' and waitingForPlayers:
-					newsock.send('NoGame '+str(startingTime)+' '+game.winner)
-				elif sd[0] == '?' and inGame:
-					msg = game.getString(sd[1])
-					#~ print nbParties
-					newsock.send(msg)
-				elif sd[0] == 'move' and inGame:
-					h = game.list_Head[int(sd[2])]
-					h.dxm = int(sd[3])
-					h.dxp = int(sd[4])
-					h.dym = int(sd[5])
-					h.dyp = int(sd[6])
-				elif sd[0] == 'reset':
-					waitingForPlayers = True
-					inGame = False
-					newgame()
-					print 'Game resetting'
-				elif sd[0] == 'who':
-					newsock.send(game.returnName())
+				lastTime = currentTime+0.1
+				data = data2
+				
+			sd = data2.split() 
+			print sd
+			if sd[0] == 'name' and waitingForPlayers:
+				color = getNewColor()
+				print "New player with pseudo %s joined the server"%sd[1]
+				h = Head(color,sd[1])
+				game.addHead(h)
+				msg = 'accepted ' + str(wi) + ' ' + str(he) + ' ' + str(sp)+ ' ' \
+					+ str(1) + ' ' +str(h.Id) + ' ' + str(startingTime)+ ' ' + str(h.dxm) + \
+					' ' + str(h.dxp)+ ' ' + str(h.dym)+ ' ' + str(h.dyp)+ ' ' + str(speed)
+				
+			elif sd[0] == '?' and waitingForPlayers:
+				msg = 'NoGame '+str(startingTime)+' '+game.winner
+			elif sd[0] == '?' and inGame:
+				msg = game.getString(sd[1])
+			elif sd[0] == 'move' and inGame:
+				h = game.list_Head[int(sd[2])]
+				h.dxm = int(sd[3])
+				h.dxp = int(sd[4])
+				h.dym = int(sd[5])
+				h.dyp = int(sd[6])
+				msg='Roger that bro'
+			elif sd[0] == 'reset':
+				waitingForPlayers = True
+				inGame = False
+				newgame()
+				msg='Ok'
+				print 'Game resetting'
+			elif sd[0] == 'who':
+				msg =game.returnName()
 					#~ print game.returnName()
 				#~ print AllTimePlayers
-		except:
-			break
+			print msg
+			newsock.send(msg)
+			
+		#~ except:
+			#~ break
 
 # Parametres du serveur	
 size = 1024
@@ -322,7 +342,7 @@ startingSoon = False
 inGame = False
 endGame = False
 nbParties = 0
-startingTime =  time.time() + 10000
+startingTime = time.time() + delay
 endTime = time.time() + 20000
 count = 0
 players = []

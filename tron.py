@@ -165,6 +165,7 @@ class GameClient:
 				sock.connect((host,port))
 				sock.send('who')
 				LP=sock.recv(size).split()
+				print LP
 				listPlayer=[]
 				for lp in LP:
 					p = lp.split(':')
@@ -255,6 +256,7 @@ class GameClient:
 			sock.connect((host,port))
 			ask = 'move '+str(self.ite)+' '+str(self.Id)+' '+str(self.dxm)+' '+str(self.dxp)+' '+str(self.dym)+' '+str(self.dyp)
 			sock.send(ask)
+			sock.sock.recv(size)
 			sock.close()
 			
 			# Close to every second update the terminal display
@@ -287,6 +289,7 @@ def newgame():
 		print ''
 		print "Asking serveur to reset the game"
 		sock.send('reset')
+		sock.recv(size)
 		sock.close()
 	return start
 

@@ -122,8 +122,12 @@ class GameClient:
 								(self.wi/2+2*i)*self.sp,(self.he/2-2*(1-j))*self.sp,fill=col)
 							canvas.create_rectangle((self.wi/2-2*(4-i))*self.sp,(self.he/2-2*(2-j))*self.sp,\
 								(self.wi/2-4+2*i)*self.sp,(self.he/2-2*(1-j))*self.sp,fill=col2)
-					self.sock.send('who')
+					msg='who'
+					print 'send = ',msg
+					self.sock.send(msg)
 					LP = self.sock.recv(size).split()
+					LP.pop(0)
+					print 'recv = ',LP
 					listPlayer = []
 					for lp in LP:
 						p = lp.split(':')
@@ -136,8 +140,12 @@ class GameClient:
 				wait = False
 				WaitingToStart = False
 				inGame = True
-				self.sock.send('who')
+				msg='who'
+				print 'send = ',msg
+				self.sock.send(msg)
 				LP = self.sock.recv(size).split()
+				LP.pop(0)
+				print 'recv = ',LP
 				listPlayer = []
 				for lp in LP:
 					p = lp.split(':')
@@ -168,8 +176,10 @@ class GameClient:
 		if inGame:
 			if currentTime > self.timeNextIte: 
 				ask = '? ' + str(self.ite)
+				print 'send = ',ask
 				self.sock.send(ask)
 				tab = self.sock.recv(size).split()
+				print tab
 				
 				#~ if(np.random.random()<0.05):
 					#~ if(np.random.random()<0.5):
@@ -204,8 +214,11 @@ class GameClient:
 						h = tab[i].split(':')
 						canvas.create_rectangle(int(h[1])*self.sp,int(h[2])*self.sp,(int(h[1])+1)*self.sp,(int(h[2])+1)*self.sp,fill=h[3])
 						i += 1
-			ask = 'move '+str(self.ite)+' '+str(self.Id)+' '+str(self.dxm)+' '+str(self.dxp)+' '+str(self.dym)+' '+str(self.dyp)
-			self.sock.send(ask)
+			tell = 'move '+str(self.ite)+' '+str(self.Id)+' '+str(self.dxm)+' '+str(self.dxp)+' '+str(self.dym)+' '+str(self.dyp)
+			print 'send = ',tell
+			self.sock.send(tell)
+			a = self.sock.recv(size)
+			print 'recv = ',a
 			
 			self.disp += 1
 			if self.disp > 100:
@@ -240,6 +253,9 @@ class GameClient:
 			print ''
 			print "Asking serveur to reset the game"
 			self.sock.send('reset')
+			print 'send = reset'
+			a = self.sock.recv(size)
+			print 'recv = ',a
 		return start
 
 def findGame(sock):
@@ -248,8 +264,10 @@ def findGame(sock):
 	Received = False
 	while not Received:
 		data = 'name '+ player
+		print 'send = ',data
 		sock.send(data)
 		s = sock.recv(size)
+		print 'recv = ',s
 		if s.split() != []:
 			if s.split()[0] == 'accepted':
 				NotInGame = False
@@ -297,8 +315,9 @@ Connected = False
 port = 3333
 size = 1024
 version = "0.0.6"
-host = '127.0.0.1'
+#~ host = '127.0.0.1'
 #~ host = 'bs406-s31-20.insa-lyon.fr'
+host = 'bs406-s16-24.insa-lyon.fr'
 #~ host = '134.214.159.30'
 #~ player = 'insert_name_here'
 
