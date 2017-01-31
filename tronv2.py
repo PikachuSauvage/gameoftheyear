@@ -88,7 +88,7 @@ class GameClient:
 		
 	def phase_init(self):
 		
-    	# Ecriture du decompte dans la  fenetre graphique
+    	# Affichage du decompte dans la  fenetre graphique
 		global NotInGame,WaitingToStart,inGame,startingTime,ad,listPlayer
 		wait = True
 		while wait:
@@ -170,9 +170,8 @@ class GameClient:
 		
 	def change(self,c):
 		
-		# Changement de direction
+		# Changement de direction sur commande du joueur
 		if not self.turned:
-			#~ print c,self.ite
 			if c=='left':
 				swap = self.dym
 				self.dym = self.dxp
@@ -189,29 +188,20 @@ class GameClient:
 		
 	def draw(self):
 		
-		# Affichage des nouvelles positions
+		# Affichage des nouvelles positions dans la fenetre
 		global canvas
 		currentTime = time.time()
 		global NotInGame,WaitingToStart,inGame,startingTime,lastWinner
 		if inGame:
+			# Le client interroge le serveur sur les positions de l'iteration precedente
 			if currentTime > self.timeNextIte: 
 				if self.ite%4==0:
 					self.turned = False
 				ask = '? ' + str(self.ite)
-				#~ print 'send = ',ask
 				self.sock.send(ask)
 				tab = self.sock.recv(size).split()
 				
-				#~ print tab
-				
-				# Random Behaviour
-				
-				#~ if(np.random.random()<0.03):
-					#~ if(np.random.random()<0.5):
-						#~ self.change('right')
-					#~ else:
-						#~ self.change('left')
-				
+				# Si la partie est terminee, reinitialisation des parametres
 				if tab[0] == 'NoGame':
 					inGame = False
 					NotInGame = True	
@@ -240,12 +230,12 @@ class GameClient:
 						h = tab[i].split(':')
 						canvas.create_rectangle(int(h[1])*self.sp,int(h[2])*self.sp,(int(h[1])+1)*self.sp,(int(h[2])+1)*self.sp,fill=h[3])
 						i += 1
+						
+			# Envoi du changement de direction au serveur
 			tell = 'move '+str(self.ite)+' '+str(self.Id)+' '+str(self.dxm)+' '+str(self.dxp)+' '+str(self.dym)+' '+str(self.dyp)
-			
 			self.sock.send(tell)
-			#~ print 'send = ',tell
-			a = self.sock.recv(size)
-			if a[0] == 'NoGame':
+			answer = self.sock.recv(size)
+			if answer[0] == 'NoGame':
 				inGame = False
 				NotInGame = True	
 				self.reset()
@@ -265,7 +255,6 @@ class GameClient:
 				self.dyp =  int(params[10])
 				self.speed = float(params[11])
 				self.begin()
-			#~ print 'recv = ',a
 			
 			self.disp += 1
 			if self.disp > 100:
@@ -291,14 +280,12 @@ class GameClient:
 	
 	def newgame(self):
 		
-		# Reinitialisation des parametres
+		# Demande de reinitialisation cote serveur
 		def start():
 			print ''
 			print "Asking serveur to reset the game"
 			self.sock.send('reset')
-			#~ print 'send = reset'
 			a = self.sock.recv(size)
-			#~ print 'recv = ',a
 		return start
 
 def findGame(sock):
@@ -310,9 +297,6 @@ def findGame(sock):
 		data = 'name '+ player
 		sock.send(data)
 		s = sock.recv(size)
-		#~ print 'send = ',data
-		#~ print 'recv = ',s
-		
 		if len(s.split())>1:
 			if s.split()[0] == 'accepted':
 				NotInGame = False
@@ -365,10 +349,10 @@ version = "0.1.2"
 #~ host = '134.214.159.30'
 #~ player = 'insert_name_here'
 
+# Ces parametres sont a rentrer en ligne de commande dans le terminal
 host = sys.argv[1]
 player = sys.argv[2]
 Initialisation = False
-
 
 # Creation de la fenetre graphique
 window = Tk()

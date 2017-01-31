@@ -50,7 +50,7 @@ class Game:
 
 	def addHead(self,h):
 
-		# Ajout d'un nouveau joueur au jeu
+		# Placement d'un nouveau joueur au jeu
 		global AllTimePlayers
 		positionned = False
 		while not positionned:
@@ -119,7 +119,7 @@ class Game:
 			
 	def generateDataString(self):
 		
-		# Donnees envoyees au joueur
+		# Positions envoyees au joueur
 		s = str(self.ite)
 		for h in self.list_Head:      
 			s += " "+h.name+":"+str(h.x)+":"+str(h.y)+":"+str(h.color)
@@ -130,10 +130,12 @@ class Game:
 	
 	def getString(self,n):
 		
+		# Iteration courante sous forme de string
 		return self.StringIte[int(n)]
 	
 	def collision(self):
 		
+		# Verification des collisions pour chaque joueur
 		global endGame,endTime
 		for h in self.list_Head:
 			if self.wall[h.x][h.y] != 17:
@@ -144,7 +146,9 @@ class Game:
 				if h.alive == 1:
 					self.number_player -= 1
 					h.alive = 0
+					# Changement de la tete lors de la collision
 					h.color = '#FF0000'
+		# Lorsqu'il ne reste qu'un seul joueur
 		if self.number_player < 2:
 			if not endGame:
 				print 'ending soon'
@@ -171,6 +175,7 @@ class Game:
 		
 	def returnName(self):
 		
+		# Donne les noms et score de chaque joueur
 		s = 'Players ' 
 		for i in self.list_Head:
 			s += i.name+':'+str(i.wins)+':'+str(i.totalwins)+':'+i.color+' '
@@ -178,6 +183,7 @@ class Game:
 
 def newgame():
 
+	# Reinitialisation de la partie
 	global delay,startingTime,endTime,endGame,nbParties
 	nbParties += 1
 	startingTime = time.time() + delay
@@ -191,7 +197,7 @@ def newgame():
 	
 def getNewColor():
 
-	# Attribue au joueur une couleur aleatoire
+	# Attribution d'une couleur aleatoire en debut de partie
     r = random.randrange(0, 255)
     g = random.randrange(0, 255)
     b = random.randrange(0, 255)
@@ -199,6 +205,7 @@ def getNewColor():
     
 def getHighscore():
 
+	# Lit les scores dans un fichier
 	global AllTimePlayers
 	if os.path.exists('highscore.txt'):
 		f = open('highscore.txt','r')
@@ -212,6 +219,7 @@ def getHighscore():
 
 def updateHighscore(winner):
 
+	# Incrementation du score du meilleur joueur de la partie
 	global AllTimePlayers
 	s = ''
 	for p in AllTimePlayers:
@@ -230,25 +238,25 @@ def handler(newsock):
 	threadLoop = True
 	global count
 	count += 1
-	data =''
 	currentTime = time.time()
 	lastTime = int(currentTime)
 	global waitingForPlayers,startingSoon,inGame,endGame,startingTime, \
 	       delay,sp,speed,endTime,endGame,nbParties,delayDeath
 	while threadLoop:
 		try:
-			#~ print 'new loop --------------------------------'
-			#~ print waitingForPlayers,startingSoon,inGame,endGame
 			currentTime = time.time()
+			# Passage a l'iteration suivante
 			if inGame and currentTime > game.timeNextIte:
 				s = game.generateDataString()
 				game.StringIte.append(s)
 				game.timeNextIte += speed*sp
 				game.ite += 1
+			# Le jeu va commencer
 			if waitingForPlayers and currentTime > (startingTime-1):
 				waitingForPlayers = False
 				startingSoon = True
 				print 'starting soon'
+			# Le jeu a demarre
 			if startingSoon and currentTime > startingTime:
 				startingSoon = False
 				inGame = True
@@ -259,11 +267,14 @@ def handler(newsock):
 				game.ite += 1
 				print 'game starting'
 				print game.number_player
+				# Si pas suffisamment de joueurs, reinitialisation
 				if game.number_player < 2:
 					endGame = 1
 					game.winner = 'None'
 					print 'Not enough player, game autoresetting'
+			# La partie est termine, nouvelle partie
 			if endGame:
+				# Fin car pas assez de joueurs
 				if endGame == 1:
 					print 'This is the end, hold your breath and count to 10 ...'
 					waitingForPlayers = True
@@ -273,6 +284,7 @@ def handler(newsock):
 					newgame()
 					print 'Game autoresetting'
 					print count,nbParties
+				# Fin car tous les joueurs ont perdu
 				else:
 					if currentTime > (endTime+delayDeath):
 						print 'This is the end, hold your breath and count to 10 ...'
@@ -286,20 +298,18 @@ def handler(newsock):
 			
 			# Communication client-serveur
 			data2 = newsock.recv(size)
-			msg= 'error'
+			msg = 'error'
 			
-			#~ if data2==data:
-				#~ if currentTime > (lastTime+20):
-					#~ print 'end of connection'
-					#~ break
-			#~ else:
-				#~ lastTime = currentTime+0.1
-				#~ data = data2
-				
-			sd = data2.split() 
+			if data2 == '':
+				if currentTime > (lastTime+20):
+					print 'end of connection'
+					newsock.shutdown(1)
+									
+			sd = data2.split()
+			
+			# Donnes envoyees en debut de partie 
 			if sd[0] == 'name' and waitingForPlayers:
 				r = np.random.random()
-				#~ print r
 				time.sleep(r)
 				color = getNewColor()
 				print "New player with pseudo %s joined the server"%sd[1]
@@ -308,7 +318,8 @@ def handler(newsock):
 				msg = 'accepted ' + str(wi) + ' ' + str(he) + ' ' + str(sp)+ ' ' \
 					+ str(1) + ' ' +str(h.Id) + ' ' + str(startingTime)+ ' ' + str(h.dxm) + \
 					' ' + str(h.dxp)+ ' ' + str(h.dym)+ ' ' + str(h.dyp)+ ' ' + str(speed)
-				
+					
+			# Donnees envoyees apres debut de partie
 			elif sd[0] == '?' and waitingForPlayers:
 				msg = 'NoGame '+str(startingTime)+' '+game.winner
 			elif sd[0] == '?' and inGame:
@@ -359,7 +370,6 @@ players = []
 
 # Initialisation du serveur
 # Socket avec les protocoles IPv4 et TCP
-
 sock = socket.socket(socket.AF_INET,socket.SOCK_STREAM)
 sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 sock.bind(('',3333))
