@@ -1,3 +1,5 @@
+# -*- coding: utf-8 -*-
+
 import time
 import numpy as np
 import socket
@@ -5,9 +7,9 @@ import threading
 import random
 import os
 
-# TRON Server version Alpha 0.0.6
+# TRON Server version Alpha 0.1.1
 
-version = "0.0.6"
+version = "0.1.1"
 
 class Head:
 
@@ -116,20 +118,22 @@ class Game:
 			h.move(self.wi,self.he,self.sp)
 			
 	def generateDataString(self):
+		
+		# Donnees envoyees au joueur
 		s = str(self.ite)
 		for h in self.list_Head:      
 			s += " "+h.name+":"+str(h.x)+":"+str(h.y)+":"+str(h.color)
-		# Donnees envoyees au joueur
 		
-		if (self.ite%4) == 0:
+		if (self.ite%4) == 0: # Realise une iteration du jeu tout les 4 pas de temps
 			self.gameUpdate()
-		
 		return s
 	
 	def getString(self,n):
+		
 		return self.StringIte[int(n)]
 	
 	def collision(self):
+		
 		global endGame,endTime
 		for h in self.list_Head:
 			if self.wall[h.x][h.y] != 17:
@@ -165,9 +169,10 @@ class Game:
 		self.timeNextIte = startingTime + speed*sp
 		
 	def returnName(self):
+		
 		s = 'Players ' 
 		for i in self.list_Head:
-			s += i.name+':'+str(i.wins)+':'+str(i.totalwins)+' '
+			s += i.name+':'+str(i.wins)+':'+str(i.totalwins)+':'+i.color+' '
 		return s
 
 def newgame():
@@ -219,6 +224,7 @@ def updateHighscore(winner):
 	f.close()
 	    
 def handler(newsock):
+	
 	# thread gerant les messages entre client et serveur
 	threadLoop = True
 	global count
@@ -226,19 +232,18 @@ def handler(newsock):
 	data =''
 	currentTime = time.time()
 	lastTime = int(currentTime)
-	global waitingForPlayers,startingSoon,inGame,endGame,admin,startingTime, \
+	global waitingForPlayers,startingSoon,inGame,endGame,startingTime, \
 	       delay,sp,speed,endTime,endGame,nbParties,delayDeath
 	while threadLoop:
 		try:
 			#~ print 'new loop --------------------------------'
-			currentTime = time.time()
 			#~ print waitingForPlayers,startingSoon,inGame,endGame
+			currentTime = time.time()
 			if inGame and currentTime > game.timeNextIte:
 				s = game.generateDataString()
 				game.StringIte.append(s)
 				game.timeNextIte += speed*sp
 				game.ite += 1
-				#~ print 'new ite'
 			if waitingForPlayers and currentTime > (startingTime-1):
 				waitingForPlayers = False
 				startingSoon = True
@@ -257,8 +262,6 @@ def handler(newsock):
 					endGame = 1
 					game.winner = 'None'
 					print 'Not enough player, game autoresetting'
-				#~ print game.StringIte
-			#~ print currentTime-(endTime+5)
 			if endGame:
 				if endGame == 1:
 					print 'This is the end, hold your breath and count to 10 ...'
@@ -283,22 +286,16 @@ def handler(newsock):
 			# Communication client-serveur
 			data2 = newsock.recv(size)
 			msg= 'error'
-			#~ 
+			
 			if data2==data:
-				#~ print 'samedata'
-				#~ newsock.send('You are repeating yourself dude, move on')
-				if currentTime > (lastTime+10):
+				if currentTime > (lastTime+20):
 					print 'end of connection'
 					break
-				#~ newsock.shutdown(0)
-				#~ players.remove(newsock)
-				#~ threadLoop = False
 			else:
 				lastTime = currentTime+0.1
 				data = data2
 				
 			sd = data2.split() 
-			#~ print sd
 			if sd[0] == 'name' and waitingForPlayers:
 				color = getNewColor()
 				print "New player with pseudo %s joined the server"%sd[1]
@@ -329,8 +326,6 @@ def handler(newsock):
 				print 'Game resetting'
 			elif sd[0] == 'who':
 				msg =game.returnName()
-					#~ print game.returnName()
-				#~ print AllTimePlayers
 			#~ print data2
 			#~ print msg
 			newsock.send(msg)
@@ -346,7 +341,6 @@ sp = 12
 speed = 0.0025
 delay = 3
 delayDeath = 2
-admin = True
 waitingForPlayers = True
 startingSoon = False 
 inGame = False
@@ -377,25 +371,17 @@ while True:
 	players.append(newsock)
 	thr = threading.Thread(target = handler, args=(newsock,))
 	thr.start()
-	#~ if nbParties>10:
-		#~ break
 sock.shutdown(1)
 sock.close()
 
 
-# TODO List :
+####### TODO List :
 
-
-####### 2- Change the time management so it is based on UTC time and not local time
+# 1- Change the time management so it is based on UTC time and not local time
 
 ####### Optionnal :
 
-# Reducing input lag by adding more iteration between gameUpdate()
-# Put might compromise the network by demanding more connections...
-
 # Color selecting ? Maybe depending of their number of wins ?
 
-# A better UI ?
 
- 
  

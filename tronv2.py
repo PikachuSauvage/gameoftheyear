@@ -6,9 +6,10 @@ import sys
 import time
 import numpy as np
 
-# TRON Client version Alpha 0.0.6
+# TRON Client version Alpha 0.1.1
 
 def terminaldisplay():
+	
 	# Affichage dans le terminal
 	global NotInGame,WaitingToStart,inGame,version,game,listPlayer,lastWinner,Initialisation
 	for i in range(5):
@@ -33,10 +34,15 @@ def terminaldisplay():
 			print ' '
 			print 'Players connected : '
 			print ' '
-			print 'Name'+'\t\t'+'Session wins'+'\t'+'All Time wins'
+			print 'Name'+'\t\t\t'+'Session wins'+'\t'+'All Time wins'+'\t'+'Color'
 			nbPlayer = len(listPlayer)
 			for p in listPlayer:
-				print p[0]+'\t\t'+p[1]+'\t\t'+p[2]
+				if len(p[0])>7 and len(p[0])<15:
+					print p[0]+'\t\t'+p[1]+'\t\t'+p[2]+'\t\t'+p[3]
+				elif len(p[0])>15:
+					print p[0]+'\t'+p[1]+'\t\t'+p[2]+'\t\t'+p[3]
+				else:
+					print p[0]+'\t\t\t'+p[1]+'\t\t'+p[2]+'\t\t'+p[3]
 			for i in range(10-nbPlayer):
 				print ''
 		elif inGame :
@@ -44,16 +50,21 @@ def terminaldisplay():
 			print ' '
 			print 'Players connected : '
 			print ' '
-			print 'Name'+'\t\t'+'Session wins'+'\t'+'All Time wins'
+			print 'Name'+'\t\t\t'+'Session wins'+'\t'+'All Time wins'+'\t'+'Color'
 			nbPlayer = len(listPlayer)
 			for p in listPlayer:
-				print p[0]+'\t\t'+p[1]+'\t\t'+p[2]
+				if len(p[0])>7 and len(p[0])<15:
+					print p[0]+'\t\t'+p[1]+'\t\t'+p[2]+'\t\t'+p[3]
+				elif len(p[0])>15:
+					print p[0]+'\t'+p[1]+'\t\t'+p[2]+'\t\t'+p[3]
+				else:
+					print p[0]+'\t\t\t'+p[1]+'\t\t'+p[2]+'\t\t'+p[3]
 			for i in range(10-nbPlayer):
 				print ''
 		
 class GameClient:
+	
 	""" Classe gerant la connexion du client et les messages au serveur """
-
 	def __init__(self,params,sock):
 		global startingTime
 		self.sock = sock
@@ -76,6 +87,7 @@ class GameClient:
 		self.turned = False
 		
 	def phase_init(self):
+		
     	# Ecriture du decompte dans la  fenetre graphique
 		global NotInGame,WaitingToStart,inGame,startingTime,ad,listPlayer
 		wait = True
@@ -132,7 +144,7 @@ class GameClient:
 					listPlayer = []
 					for lp in LP:
 						p = lp.split(':')
-						listPlayer.append([p[0],p[1],p[2]])
+						listPlayer.append([p[0],p[1],p[2],p[3]])
 					window.update()
 					terminaldisplay()
 					
@@ -142,7 +154,6 @@ class GameClient:
 				WaitingToStart = False
 				inGame = True
 				msg='who'
-				
 				self.sock.send(msg)
 				LP = self.sock.recv(size).split()
 				LP.pop(0)
@@ -151,14 +162,14 @@ class GameClient:
 				listPlayer = []
 				for lp in LP:
 					p = lp.split(':')
-					listPlayer.append([p[0],p[1],p[2]])
+					listPlayer.append([p[0],p[1],p[2],p[3]])
 				terminaldisplay()
 		
 	def change(self,c):
+		
 		# Changement de direction
-
 		if not self.turned:
-			print c,self.ite
+			#~ print c,self.ite
 			if c=='left':
 				swap = self.dym
 				self.dym = self.dxp
@@ -174,6 +185,7 @@ class GameClient:
 			self.turned = True
 		
 	def draw(self):
+		
 		# Affichage des nouvelles positions
 		global canvas
 		currentTime = time.time()
@@ -188,7 +200,9 @@ class GameClient:
 				#~ print 'send = ',ask
 				#~ print tab
 				
-				#~ if(np.random.random()<0.05):
+				# Random Behaviour
+				
+				#~ if(np.random.random()<0.03):
 					#~ if(np.random.random()<0.5):
 						#~ self.change('right')
 					#~ else:
@@ -234,28 +248,24 @@ class GameClient:
 				self.disp = 0	
 				
 	def begin(self):
+		
 		# Demarrage du nouveau jeu
-		global NotInGame,WaitingToStart,inGame,LabelNotCreated
-		if LabelNotCreated:
-			self.createLabel()
+		global NotInGame,WaitingToStart,inGame
 		self.phase_init()
 		for i in range(100000):
 			window.after(10,self.draw())
 			window.update()			
-				
-			
-	def createLabel(self):
-		l = Label( window, font=('times', 20, 'bold'), bg='green',text='Host')
-		l.pack()
+	
 
  	def reset(self):
+		
  		# Reinitialisation de la fenetre graphique
 		global canvas
 		canvas.delete("all")
-		#~ canvas = Canvas(window,bg='black',height=he*sp,width=wi*sp)
 		window.update()
 	
 	def newgame(self):
+		
 		# Reinitialisation des parametres
 		def start():
 			print ''
@@ -267,6 +277,7 @@ class GameClient:
 		return start
 
 def findGame(sock):
+	
 	# Recoit les parametres du joueur
 	global NotInGame,WaitingToStart,inGame
 	Received = False
@@ -290,7 +301,7 @@ def findGame(sock):
 
 
 def ConnectionServer():
-   # Initialisation de la connexion
+    # Initialisation de la connexion
 	# Socket avec les protocoles IPv4 et TCP
     global Connected
     global game
@@ -313,7 +324,6 @@ startingTime = 0
 NotInGame = True
 WaitingToStart = False 
 inGame = False
-LabelNotCreated = False
 Initialisation = True
 listPlayer = []
 lastWinner = 'None'
@@ -323,43 +333,17 @@ lastWinner = 'None'
 Connected = False
 port = 3333
 size = 1024
-version = "0.0.6"
+version = "0.1.1"
+
 #~ host = '127.0.0.1'
-#~ host = 'bs406-s31-20.insa-lyon.fr'
-host = 'bs406-s16-24.insa-lyon.fr'
+#~ host = 'bs406-s31-23.insa-lyon.fr' #4BIM
 #~ host = '134.214.159.30'
 #~ player = 'insert_name_here'
 
-# Script terminal initial
+host = sys.argv[1]
+player = sys.argv[2]
+Initialisation = False
 
-#terminaldisplay()
-#~ 
-# while True:
-# 	try:
-# 		#~ print ('WARNING : Please execute this script from a real terminal ')
-# 		print ''
-# 		print ('Where is the server launched ?')
-# 		print ('For example if it is on bs406-s31-15 enter 15')
-# 		print ''
-# 		x = int(input(""))
-# 		host = 'bs406-s31-'+str(x)
-# 		break
-# 	except ValueError:
-# 		print("Oops!  That was no valid number.  Try again...")
-		
-terminaldisplay()
-
-while True:
-	try:
-		print('What is your name ?')
-		print('Example : xXDarkRangerdu93Xx or John')
-		print ''
-		s = raw_input("")
-		player = s
-		Initialisation = False
-		break
-	except ValueError:
-		print("Oops!  That was not a valid name.  Try again...")
 
 # Creation de la fenetre graphique
 window = Tk()
@@ -370,8 +354,6 @@ ConnectionServer()
 
 canvas = Canvas(window,bg='black',height=game.he*game.sp,width=game.wi*game.sp)
 canvas.pack(side=TOP)
-
-#~ if ad:
 
 b=Button(window,text="New Game")
 b.config(command=game.newgame())
@@ -387,17 +369,12 @@ game.begin()
 window.mainloop()
 
 
-# TODO List :
 
-####### 1- End of game if only one player alive 
+####### TODO List :
 
-####### 2- Change the time management so it is based on UTC time and not local time
+# 1- Change the time management so it is based on UTC time and not local time
 
 ####### Optionnal :
 
-# Reducing input lag by adding more iteration between gameUpdate()
-# Put might compromise the network by demanding more connections...
-
 # Color selecting ? Maybe depending of their number of wins ?
 
-# A better UI ?
