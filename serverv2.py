@@ -7,9 +7,9 @@ import threading
 import random
 import os
 
-# TRON Server version Alpha 0.1.1
+# TRON Server version Alpha 0.1.2
 
-version = "0.1.1"
+version = "0.1.2"
 
 class Head:
 
@@ -144,6 +144,7 @@ class Game:
 				if h.alive == 1:
 					self.number_player -= 1
 					h.alive = 0
+					h.color = '#FF0000'
 		if self.number_player < 2:
 			if not endGame:
 				print 'ending soon'
@@ -287,16 +288,19 @@ def handler(newsock):
 			data2 = newsock.recv(size)
 			msg= 'error'
 			
-			if data2==data:
-				if currentTime > (lastTime+20):
-					print 'end of connection'
-					break
-			else:
-				lastTime = currentTime+0.1
-				data = data2
+			#~ if data2==data:
+				#~ if currentTime > (lastTime+20):
+					#~ print 'end of connection'
+					#~ break
+			#~ else:
+				#~ lastTime = currentTime+0.1
+				#~ data = data2
 				
 			sd = data2.split() 
 			if sd[0] == 'name' and waitingForPlayers:
+				r = np.random.random()
+				#~ print r
+				time.sleep(r)
 				color = getNewColor()
 				print "New player with pseudo %s joined the server"%sd[1]
 				h = Head(color,sd[1])
@@ -311,6 +315,8 @@ def handler(newsock):
 				msg = game.getString(sd[1])
 			elif sd[0] == '?' and endGame:
 				msg = game.getString(sd[1])
+			elif sd[0] == 'move' and waitingForPlayers:
+				msg = 'NoGame '+str(startingTime)+' '+game.winner
 			elif sd[0] == 'move' and inGame:
 				h = game.list_Head[int(sd[2])]
 				h.dxm = int(sd[3])
@@ -339,7 +345,7 @@ wi = 60
 he = 48
 sp = 12
 speed = 0.0025
-delay = 3
+delay = 5
 delayDeath = 2
 waitingForPlayers = True
 startingSoon = False 

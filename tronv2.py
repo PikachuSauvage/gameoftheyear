@@ -6,7 +6,7 @@ import sys
 import time
 import numpy as np
 
-# TRON Client version Alpha 0.1.1
+# TRON Client version Alpha 0.1.2
 
 def terminaldisplay():
 	
@@ -137,9 +137,9 @@ class GameClient:
 								(self.wi/2-4+2*i)*self.sp,(self.he/2-2*(1-j))*self.sp,fill=col2)
 					msg='who'
 					self.sock.send(msg)
+					#~ print 'send = ',msg
 					LP = self.sock.recv(size).split()
 					LP.pop(0)
-					#~ print 'send = ',msg
 					#~ print 'recv = ',LP
 					listPlayer = []
 					for lp in LP:
@@ -150,14 +150,17 @@ class GameClient:
 					
 					time.sleep(0.01)
 			else :
+				canvas.delete("all")
+				window.update()
 				wait = False
 				WaitingToStart = False
 				inGame = True
 				msg='who'
 				self.sock.send(msg)
+				#~ print 'send = ',msg
 				LP = self.sock.recv(size).split()
 				LP.pop(0)
-				#~ print 'send = ',msg
+				
 				#~ print 'recv = ',LP
 				listPlayer = []
 				for lp in LP:
@@ -195,9 +198,10 @@ class GameClient:
 				if self.ite%4==0:
 					self.turned = False
 				ask = '? ' + str(self.ite)
+				#~ print 'send = ',ask
 				self.sock.send(ask)
 				tab = self.sock.recv(size).split()
-				#~ print 'send = ',ask
+				
 				#~ print tab
 				
 				# Random Behaviour
@@ -221,6 +225,7 @@ class GameClient:
 					self.he = int(params[2])
 					self.sp = int(params[3])
 					self.Id = int(params[5])
+					startingTime = float(params[6])
 					self.dxm =  int(params[7])
 					self.dxp =  int(params[8])
 					self.dym =  int(params[9])
@@ -238,8 +243,28 @@ class GameClient:
 			tell = 'move '+str(self.ite)+' '+str(self.Id)+' '+str(self.dxm)+' '+str(self.dxp)+' '+str(self.dym)+' '+str(self.dyp)
 			
 			self.sock.send(tell)
-			a = self.sock.recv(size)
 			#~ print 'send = ',tell
+			a = self.sock.recv(size)
+			if a[0] == 'NoGame':
+				inGame = False
+				NotInGame = True	
+				self.reset()
+				startingTime = float(tab[1])
+				lastWinner = tab[2]
+				self.timeNextIte = startingTime + self.speed*self.sp
+				params = findGame(self.sock)
+				self.ite = 0
+				self.wi = int(params[1])
+				self.he = int(params[2])
+				self.sp = int(params[3])
+				self.Id = int(params[5])
+				startingTime = float(params[6])
+				self.dxm =  int(params[7])
+				self.dxp =  int(params[8])
+				self.dym =  int(params[9])
+				self.dyp =  int(params[10])
+				self.speed = float(params[11])
+				self.begin()
 			#~ print 'recv = ',a
 			
 			self.disp += 1
@@ -271,9 +296,9 @@ class GameClient:
 			print ''
 			print "Asking serveur to reset the game"
 			self.sock.send('reset')
-			print 'send = reset'
+			#~ print 'send = reset'
 			a = self.sock.recv(size)
-			print 'recv = ',a
+			#~ print 'recv = ',a
 		return start
 
 def findGame(sock):
@@ -333,7 +358,7 @@ lastWinner = 'None'
 Connected = False
 port = 3333
 size = 1024
-version = "0.1.1"
+version = "0.1.2"
 
 #~ host = '127.0.0.1'
 #~ host = 'bs406-s31-23.insa-lyon.fr' #4BIM
