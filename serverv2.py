@@ -7,9 +7,9 @@ import threading
 import random
 import os
 
-# TRON Server version Alpha 0.1.2
+# TRON Server version Alpha 0.1.4
 
-version = "0.1.2"
+version = "0.1.4"
 
 class Head:
 
@@ -29,8 +29,9 @@ class Head:
 		self.totalwins = 0
 		
 	def move(self,wi,he,sp):
-		self.x = (self.x + self.dxp - self.dxm)%(wi)
-		self.y = (self.y + self.dyp - self.dym)%(he)
+		if alive == 1:
+			self.x = (self.x + self.dxp - self.dxm)%(wi)
+			self.y = (self.y + self.dyp - self.dym)%(he)
 
 class Game:
 
@@ -187,7 +188,54 @@ def newgame():
 	inGame = False
 	endGame = 0
 	waitingForPlayers = True
+
+def colorPalette():
+	col=[]
+	col.append(['slategray','#6f8090',10])
+	col.append(['cornsilk3','#cdc7b0',10])
+	#~ col.append(['burlywood2','#edc591',10])
+	col.append(['lightpink','#ffadb8',10])
+	#~ col.append(['palegreen','#97fa97',10])
+	col.append(['paleturquoise','#baffff',10])
+	#~ col.append(['thistle2','#cac3ca',10])
+	col.append(['slateblue3','#6958cd',10])
+	col.append(['steelblue3','#4f93cd',10])
+	col.append(['tomato','#ff6246',10])
+	col.append(['orangered1','#ff4500',10])
+	col.append(['orange','#ffa400',10])
+	col.append(['firebrick3','#cd2525',10])
+	#~ col.append(['brown2','#ed3a3a',10])
+	#~ col.append(['yellow1','#ffff00',10])
+	col.append(['gold2','#edc800',10])
+	col.append(['deeppink2','#ed1288',10])
+	col.append(['mediumpurple','#926fdb',10])
+	col.append(['chartreuse2','#7eff00',10])
+	col.append(['green2','#00cd00',10])
+	#~ col.append(['olivedrab3','#9acd31',10])
+	#~ col.append(['limegreen','#31cd31',10])
+	col.append(['royalblue2','#436ded',10])
+	col.append(['seagreen3','#43cd80',10])
+	col.append(['skyblue3','#6ca6cd',10])
+	col.append(['darkmagenta','#8a008a',10])
+	col.append(['hotpink1','#ff6db4',10])
+	return col
 	
+def getColor():
+	global ColorP
+	a = range(len(ColorP))
+	a = random.shuffle(a)
+	found = False
+	res = 0
+	for i in a:
+		if ColorP[i][3]>5:
+			if not found:
+				found = True
+				ColorP[i][3]=0
+				res = i
+	if not found:
+		ColorP.append(['random',getNewColor(),0])
+		res=len(ColorP-1)
+	return res
 	
 def getNewColor():
 
@@ -223,7 +271,7 @@ def updateHighscore(winner):
 	f = open('highscore.txt','w')
 	f.writelines(s)
 	f.close()
-	    
+   
 def handler(newsock):
 	
 	# thread gerant les messages entre client et serveur
@@ -234,7 +282,7 @@ def handler(newsock):
 	currentTime = time.time()
 	lastTime = int(currentTime)
 	global waitingForPlayers,startingSoon,inGame,endGame,startingTime, \
-	       delay,sp,speed,endTime,endGame,nbParties,delayDeath
+	       delay,sp,speed,endTime,endGame,nbParties,delayDeath,colorP
 	while threadLoop:
 		try:
 			#~ print 'new loop --------------------------------'
@@ -297,17 +345,23 @@ def handler(newsock):
 				#~ data = data2
 				
 			sd = data2.split() 
+			#~ print sd
 			if sd[0] == 'name' and waitingForPlayers:
+				if len(sd)>2:
+					color = sd[2]
+				else:
+					color = colorP[getColor()][1]
+					
+					
 				r = np.random.random()
 				#~ print r
 				time.sleep(r)
-				color = getNewColor()
 				print "New player with pseudo %s joined the server"%sd[1]
 				h = Head(color,sd[1])
 				game.addHead(h)
 				msg = 'accepted ' + str(wi) + ' ' + str(he) + ' ' + str(sp)+ ' ' \
 					+ str(1) + ' ' +str(h.Id) + ' ' + str(startingTime)+ ' ' + str(h.dxm) + \
-					' ' + str(h.dxp)+ ' ' + str(h.dym)+ ' ' + str(h.dyp)+ ' ' + str(speed)
+					' ' + str(h.dxp)+ ' ' + str(h.dym)+ ' ' + str(h.dyp)+ ' ' + str(speed)+ ' ' +color
 				
 			elif sd[0] == '?' and waitingForPlayers:
 				msg = 'NoGame '+str(startingTime)+' '+game.winner
@@ -330,9 +384,23 @@ def handler(newsock):
 				newgame()
 				msg='Ok'
 				print 'Game resetting'
+			elif sd[0] == 'hello':
+				msg='world'
 			elif sd[0] == 'who':
 				msg =game.returnName()
-			#~ print data2
+			elif sd[0] == 'alive':
+				msg='Alive : '
+				first = True
+				for h in game.list_Head:
+					if h.alive == 1:
+						if first:
+							first = False
+						else:
+							msg = msg + ' | '
+						if len(h.name)>12:
+							msg = msg+h.name[0:10]
+						else:
+							msg = msg+h.name
 			#~ print msg
 			newsock.send(msg)
 			
@@ -356,6 +424,8 @@ startingTime = time.time() + delay
 endTime = time.time() + 20000
 count = 0
 players = []
+colorP=colorPalette()
+
 
 # Initialisation du serveur
 # Socket avec les protocoles IPv4 et TCP
